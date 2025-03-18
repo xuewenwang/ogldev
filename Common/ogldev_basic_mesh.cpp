@@ -80,6 +80,7 @@ bool BasicMesh::LoadMesh(const string& Filename)
     }
 
     bool Ret = false;
+    printf("xww BasicMesh::LoadMesh\n");
 
     m_pScene = m_Importer.ReadFile(Filename.c_str(), ASSIMP_LOAD_FLAGS);
 

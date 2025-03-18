@@ -154,10 +154,12 @@ bool SkinningTechnique::Init()
         }
     }
 
+    printf("xww SkinningTechnique::Init, ARRAY_SIZE_IN_ELEMENTS(m_boneLocation)=%d\n", ARRAY_SIZE_IN_ELEMENTS(m_boneLocation));
     for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(m_boneLocation) ; i++) {
         char Name[128];
         memset(Name, 0, sizeof(Name));
-        SNPRINTF(Name, sizeof(Name), "gBones[%d]", i);
+        SNPRINTF(Name, sizeof(Name), "gBones[%d]\n", i);
+        printf("xww i=%d Name=%s", i, Name);
         m_boneLocation[i] = GetUniformLocation(Name);
     }
 

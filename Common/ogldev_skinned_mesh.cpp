@@ -475,10 +475,12 @@ void SkinnedMesh::CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTi
 }
 
 
-void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const Matrix4f& ParentTransform, const aiAnimation& Animation)
+void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const Matrix4f& ParentTransform, const aiAnimation& Animation, string indent)
 {
     string NodeName(pNode->mName.data);
 
+    string str = indent + "|--";
+    printf("xww ReadNodeHierarchy NodeName= %s%s\n", str.c_str(), NodeName.c_str());
     Matrix4f NodeTransformation(pNode->mTransformation);
 
     const aiNodeAnim* pNodeAnim = FindNodeAnim(Animation, NodeName);
@@ -508,6 +510,7 @@ void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNod
         m_BoneInfo[BoneIndex].FinalTransformation = m_GlobalInverseTransform * GlobalTransformation * m_BoneInfo[BoneIndex].OffsetMatrix;
     }
 
+    indent += "|  ";
     for (uint i = 0 ; i < pNode->mNumChildren ; i++) {
         string ChildName(pNode->mChildren[i]->mName.data);
 
@@ -518,8 +521,11 @@ void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNod
             assert(0);
         }
 
+        // printf("xww ReadNodeHierarchy i=%d %s ChildName=%s isRequired=%d\n", i, str.c_str(), ChildName.c_str(), it->second.isRequired);
         if (it->second.isRequired) {
-            ReadNodeHierarchy(AnimationTimeTicks, pNode->mChildren[i], GlobalTransformation, Animation);
+            ReadNodeHierarchy(AnimationTimeTicks, pNode->mChildren[i], GlobalTransformation, Animation, indent);
+        }else{
+            printf("xww ReadNodeHierarchy ChildNam= %s%s    isRequired=%d i=%d\n", (indent + "|--").c_str(), ChildName.c_str(), it->second.isRequired, i);
         }
     }
 }
@@ -626,7 +632,9 @@ void SkinnedMesh::GetBoneTransforms(float TimeInSeconds, vector<Matrix4f>& Trans
     float AnimationTimeTicks = CalcAnimationTimeTicks(TimeInSeconds, AnimationIndex);
     const aiAnimation& Animation = *m_pScene->mAnimations[AnimationIndex];
 
+    printf("xww GetBoneTransforms begin\n");
     ReadNodeHierarchy(AnimationTimeTicks, m_pScene->mRootNode, Identity, Animation);
+    printf("xww GetBoneTransforms end\n\n");
     Transforms.resize(m_BoneInfo.size());
 
     for (uint i = 0 ; i < m_BoneInfo.size() ; i++) {
