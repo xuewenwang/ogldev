@@ -106,6 +106,7 @@ bool BasicMesh::InitFromScene(const aiScene* pScene, const string& Filename)
     m_Meshes.resize(pScene->mNumMeshes);
     m_Materials.resize(pScene->mNumMaterials);
 
+    printf("xww InitFromScene, pScene->mNumMeshes=%d, pScene->mNumMaterials=%d\n", pScene->mNumMeshes, pScene->mNumMaterials);
     unsigned int NumVertices = 0;
     unsigned int NumIndices = 0;
 
@@ -135,6 +136,16 @@ void BasicMesh::CountVerticesAndIndices(const aiScene* pScene, unsigned int& Num
 
         NumVertices += pScene->mMeshes[i]->mNumVertices;
         NumIndices  += m_Meshes[i].NumIndices;
+        printf("xww CountVerticesAndIndices, i=%d, MaterialIndex=%d, mNumFaces=%d, NumIndices=%d, BaseVertex=%d, BaseIndex=%d, NumVertices=%d, NumIndices=%d\n", i,
+            m_Meshes[i].MaterialIndex,  pScene->mMeshes[i]->mNumFaces, m_Meshes[i].NumIndices, m_Meshes[i].BaseVertex, m_Meshes[i].BaseIndex, NumVertices, NumIndices);
+
+        // xww InitFromScene, pScene->mNumMeshes=6, pScene->mNumMaterials=6
+        // xww CountVerticesAndIndices, i=0, MaterialIndex=0, mNumFaces=628, NumIndices=1884, BaseVertex=0, BaseIndex=0, NumVertices=494, NumIndices=1884
+        // xww CountVerticesAndIndices, i=1, MaterialIndex=1, mNumFaces=177, NumIndices=531, BaseVertex=494, BaseIndex=1884, NumVertices=596, NumIndices=2415
+        // xww CountVerticesAndIndices, i=2, MaterialIndex=2, mNumFaces=78, NumIndices=234, BaseVertex=596, BaseIndex=2415, NumVertices=654, NumIndices=2649
+        // xww CountVerticesAndIndices, i=3, MaterialIndex=3, mNumFaces=16, NumIndices=48, BaseVertex=654, BaseIndex=2649, NumVertices=672, NumIndices=2697
+        // xww CountVerticesAndIndices, i=4, MaterialIndex=4, mNumFaces=22, NumIndices=66, BaseVertex=672, BaseIndex=2697, NumVertices=708, NumIndices=2763
+        // xww CountVerticesAndIndices, i=5, MaterialIndex=5, mNumFaces=106, NumIndices=318, BaseVertex=708, BaseIndex=2763, NumVertices=840, NumIndices=3081     
     }
 }
 
@@ -151,9 +162,12 @@ void BasicMesh::InitAllMeshes(const aiScene* pScene)
     for (unsigned int i = 0 ; i < m_Meshes.size() ; i++) {
         const aiMesh* paiMesh = pScene->mMeshes[i];
 #ifdef USE_MESH_OPTIMIZER
+        printf("xww InitAllMeshes 1\n");
         InitSingleMeshOpt(i, paiMesh);
 #else
+        printf("xww InitAllMeshes begin\n");
         InitSingleMesh(i, paiMesh);
+        printf("xww InitAllMeshes end\n\n");
 #endif
     }
 }
@@ -167,6 +181,7 @@ void BasicMesh::InitSingleMesh(uint MeshIndex, const aiMesh* paiMesh)
     // Populate the vertex attribute vectors
     Vertex v;
 
+    printf("xww InitSingleMesh, paiMesh->mNumVertices=%d, paiMesh->mNumFaces=%d", paiMesh->mNumVertices, paiMesh->mNumFaces);
     for (unsigned int i = 0; i < paiMesh->mNumVertices; i++) {
         const aiVector3D& pPos = paiMesh->mVertices[i];
        // printf("%d: ", i); Vector3f t(pPos.x, pPos.y, pPos.z); t.Print();
@@ -183,6 +198,8 @@ void BasicMesh::InitSingleMesh(uint MeshIndex, const aiMesh* paiMesh)
         const aiVector3D& pTexCoord = paiMesh->HasTextureCoords(0) ? paiMesh->mTextureCoords[0][i] : Zero3D;
         v.TexCoords = Vector2f(pTexCoord.x, pTexCoord.y);
 
+        printf("xww InitSingleMesh, i=%d, v.Position=(%f, %f, %f)  v.Normal=(%f, %f, %f)  v.TexCoords=(%f, %f)\n", i,
+            v.Position.x, v.Position.y, v.Position.z, v.Normal.x, v.Normal.y, v.Normal.z, v.TexCoords.x, v.TexCoords.y);
         m_Vertices.push_back(v);
     }
 
@@ -192,6 +209,7 @@ void BasicMesh::InitSingleMesh(uint MeshIndex, const aiMesh* paiMesh)
         m_Indices.push_back(Face.mIndices[0]);
         m_Indices.push_back(Face.mIndices[1]);
         m_Indices.push_back(Face.mIndices[2]);
+        printf("xww InitSingleMesh, i=%d, mIndices=(%d, %d, %d)\n", i, Face.mIndices[0], Face.mIndices[1], Face.mIndices[2]);
     }
 }
 
@@ -312,12 +330,14 @@ bool BasicMesh::InitMaterials(const aiScene* pScene, const string& Filename)
 
     bool Ret = true;
 
+    printf("xww InitMaterials, Dir=%s Filename=%s pScene->mNumMaterials=%d\n", Dir.c_str(), Filename.c_str(), pScene->mNumMaterials);
     printf("Num materials: %d\n", pScene->mNumMaterials);
 
     // Initialize the materials
     for (unsigned int i = 0 ; i < pScene->mNumMaterials ; i++) {
         const aiMaterial* pMaterial = pScene->mMaterials[i];
 
+        printf("xww InitMaterials i=%d\n", i);
         LoadTextures(Dir, pMaterial, i);
 
         LoadColors(pMaterial, i);
@@ -329,6 +349,7 @@ bool BasicMesh::InitMaterials(const aiScene* pScene, const string& Filename)
 
 void BasicMesh::LoadTextures(const string& Dir, const aiMaterial* pMaterial, int Index)
 {
+    printf("xww LoadTextures begin\n");
     LoadDiffuseTexture(Dir, pMaterial, Index);
     LoadSpecularTexture(Dir, pMaterial, Index);
 
@@ -336,11 +357,13 @@ void BasicMesh::LoadTextures(const string& Dir, const aiMaterial* pMaterial, int
     LoadAlbedoTexture(Dir, pMaterial, Index);
     LoadMetalnessTexture(Dir, pMaterial, Index);
     LoadRoughnessTexture(Dir, pMaterial, Index);
+    printf("xww LoadTextures end\n");
 }
 
 
 void BasicMesh::LoadDiffuseTexture(const string& Dir, const aiMaterial* pMaterial, int MaterialIndex)
 {
+    printf("xww LoadDiffuseTexture\n");
     m_Materials[MaterialIndex].pDiffuse = NULL;
 
     if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
@@ -388,6 +411,7 @@ void BasicMesh::LoadSpecularTexture(const string& Dir, const aiMaterial* pMateri
 {
     m_Materials[MaterialIndex].pSpecularExponent = NULL;
 
+    printf("xww LoadSpecularTexture\n");
     if (pMaterial->GetTextureCount(aiTextureType_SHININESS) > 0) {
         aiString Path;
 
@@ -433,6 +457,7 @@ void BasicMesh::LoadAlbedoTexture(const string& Dir, const aiMaterial* pMaterial
 {
     m_Materials[MaterialIndex].PBRmaterial.pAlbedo = NULL;
 
+    printf("xww LoadAlbedoTexture\n");
     if (pMaterial->GetTextureCount(aiTextureType_BASE_COLOR) > 0) {
         aiString Path;
 
@@ -480,6 +505,7 @@ void BasicMesh::LoadMetalnessTexture(const string& Dir, const aiMaterial* pMater
 
     int NumTextures = pMaterial->GetTextureCount(aiTextureType_METALNESS);
 
+    printf("xww LoadMetalnessTexture\n");
     if (NumTextures > 0) {
         printf("Num metalness textures %d\n", NumTextures);
 
@@ -530,6 +556,7 @@ void BasicMesh::LoadRoughnessTexture(const string& Dir, const aiMaterial* pMater
 
     int NumTextures = pMaterial->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS);
 
+    printf("xww LoadRoughnessTexture\n");
     if (NumTextures > 0) {
         printf("Num roughness textures %d\n", NumTextures);
 

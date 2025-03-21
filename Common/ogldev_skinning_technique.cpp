@@ -26,6 +26,7 @@ SkinningTechnique::SkinningTechnique()
 
 bool SkinningTechnique::Init()
 {
+    printf("xww SkinningTechnique::Init begin\n");
     if (!Technique::Init()) {
         return false;
     }
@@ -53,6 +54,7 @@ bool SkinningTechnique::Init()
         m_boneLocation[i] = GetUniformLocation(Name);
     }
 
+    printf("xww SkinningTechnique::Init end\n");
     return true;
 }
 

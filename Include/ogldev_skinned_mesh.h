@@ -130,7 +130,7 @@ private:
     void ReadNodeHierarchyBlended(float StartAnimationTimeTicksm, float EndAnimationTimeTicks, const aiNode* pNode, const Matrix4f& ParentTransform,
                                   const aiAnimation& StartAnimation, const aiAnimation& EndAnimation, float BlendFactor);
     void MarkRequiredNodesForBone(const aiBone* pBone);
-    void InitializeRequiredNodeMap(const aiNode* pNode);
+    void InitializeRequiredNodeMap(const aiNode* pNode, string indent = "");
     float CalcAnimationTimeTicks(float TimeInSeconds, unsigned int AnimationIndex);
 
     struct LocalTransform {

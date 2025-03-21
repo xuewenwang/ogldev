@@ -38,6 +38,7 @@ SkinnedMesh::~SkinnedMesh()
 
 void SkinnedMesh::ReserveSpace(unsigned int NumVertices, unsigned int NumIndices)
 {
+    printf("xww SkinnedMesh::ReserveSpace, NumVertices=%d, NumIndices", NumVertices, NumIndices);
     BasicMesh::ReserveSpace(NumVertices, NumIndices);
     InitializeRequiredNodeMap(m_pScene->mRootNode);
 }
@@ -51,6 +52,9 @@ void SkinnedMesh::InitSingleMesh(uint MeshIndex, const aiMesh* paiMesh)
     // Populate the vertex attribute vectors
     SkinnedVertex v;
 
+    printf("xww InitSingleMesh begin\n");
+    printf("xww InitSingleMesh, MeshIndex=%d, paiMesh->mName=%s paiMesh->mNumVertices=%d, paiMesh->mNumFaces=%d\n",
+        MeshIndex, paiMesh->mName.C_Str(), paiMesh->mNumVertices, paiMesh->mNumFaces);
     for (unsigned int i = 0; i < paiMesh->mNumVertices; i++) {
         const aiVector3D& pPos = paiMesh->mVertices[i];
         // printf("%d: ", i); Vector3f v(pPos.x, pPos.y, pPos.z); v.Print();
@@ -68,6 +72,8 @@ void SkinnedMesh::InitSingleMesh(uint MeshIndex, const aiMesh* paiMesh)
         const aiVector3D& pTexCoord = paiMesh->HasTextureCoords(0) ? paiMesh->mTextureCoords[0][i] : Zero3D;
         v.TexCoords = Vector2f(pTexCoord.x, pTexCoord.y);
 
+        printf("xww InitSingleMesh, i=%d, v.Position=(%f, %f, %f)  v.Normal=(%f, %f, %f)  v.TexCoords=(%f, %f)\n", i,
+            v.Position.x, v.Position.y, v.Position.z, v.Normal.x, v.Normal.y, v.Normal.z, v.TexCoords.x, v.TexCoords.y);
         m_SkinnedVertices.push_back(v);
     }
 
@@ -77,9 +83,11 @@ void SkinnedMesh::InitSingleMesh(uint MeshIndex, const aiMesh* paiMesh)
         m_Indices.push_back(Face.mIndices[0]);
         m_Indices.push_back(Face.mIndices[1]);
         m_Indices.push_back(Face.mIndices[2]);
+        printf("xww InitSingleMesh, i=%d, mIndices=(%d, %d, %d)\n", i, Face.mIndices[0], Face.mIndices[1], Face.mIndices[2]);
     }
 
     LoadMeshBones(MeshIndex, paiMesh, m_SkinnedVertices, m_Meshes[MeshIndex].BaseVertex);
+    printf("xww InitSingleMesh end\n");
 }
 
 
@@ -183,8 +191,10 @@ void SkinnedMesh::LoadMeshBones(uint MeshIndex, const aiMesh* pMesh, vector<Skin
         assert(0);
     }
 
+    printf("xww LoadMeshBones, MeshIndex=%d BaseVertex=%d pMesh->mNumBones=%d\n", MeshIndex, BaseVertex, pMesh->mNumBones);
     // printf("Loading mesh bones %d\n", MeshIndex);
     for (uint i = 0 ; i < pMesh->mNumBones ; i++) {
+        printf("xww LoadMeshBones, i=%d\n", i);
         // printf("Bone %d %s\n", i, pMesh->mBones[i]->mName.C_Str());
         LoadSingleBone(MeshIndex, pMesh->mBones[i], SkinnedVertices, BaseVertex);
     }
@@ -201,11 +211,20 @@ void SkinnedMesh::LoadSingleBone(uint MeshIndex, const aiBone* pBone, vector<Ski
         m_BoneInfo.push_back(bi);
     }
 
+    aiVector3t<float> Scaling;
+    aiVector3t<float> Rotation;
+    aiVector3t<float> Position;
+    pBone->mOffsetMatrix.Decompose(Scaling, Rotation, Position);
+    printf("xww LoadSingleBone, BoneId=%d pBone->mName=%s pBone->mNumWeights=%d, Scaling=(%f, %f, %f)  Rotation=(%f, %f, %f)  Position=(%f, %f, %f)\n", BoneId,
+        pBone->mName.C_Str(), pBone->mNumWeights, Scaling.x, Scaling.y, Scaling.z, Rotation.x, Rotation.y, Rotation.z, Position.x, Position.y, Position.z);
+
+
     for (uint i = 0 ; i < pBone->mNumWeights ; i++) {
         const aiVertexWeight& vw = pBone->mWeights[i];
         uint GlobalVertexID = BaseVertex + pBone->mWeights[i].mVertexId;
         // printf("%d: %d %f\n",i, pBone->mWeights[i].mVertexId, vw.mWeight);
         SkinnedVertices[GlobalVertexID].Bones.AddBoneData(BoneId, vw.mWeight);
+        printf("xww LoadSingleBone, i=%d, vw.mVertexId=%d, vw.mWeight=%f BaseVertex=%d GlobalVertexID=%d\n", i, vw.mVertexId, vw.mWeight, BaseVertex, GlobalVertexID);
     }
 
     MarkRequiredNodesForBone(pBone);
@@ -217,7 +236,7 @@ void SkinnedMesh::MarkRequiredNodesForBone(const aiBone* pBone)
     string NodeName(pBone->mName.C_Str());
 
     const aiNode* pParent = NULL;
-
+    printf("xww MarkRequiredNodesForBone, NodeName=%s\n", NodeName.c_str());
     do {
         map<string,NodeInfo>::iterator it = m_requiredNodeMap.find(NodeName);
 
@@ -229,6 +248,7 @@ void SkinnedMesh::MarkRequiredNodesForBone(const aiBone* pBone)
         it->second.isRequired = true;
 
         pParent = it->second.pNode->mParent;
+        printf("xww MarkRequiredNodesForBone, NodeName=%s it->second.pNode->mParent=0x%x it->second.pNode=%s\n", NodeName.c_str(), pParent, it->second.pNode->mName.C_Str());
 
         if (pParent) {
             NodeName = string(pParent->mName.C_Str());
@@ -238,7 +258,7 @@ void SkinnedMesh::MarkRequiredNodesForBone(const aiBone* pBone)
 }
 
 
-void SkinnedMesh::InitializeRequiredNodeMap(const aiNode* pNode)
+void SkinnedMesh::InitializeRequiredNodeMap(const aiNode* pNode, string indent)
 {
     string NodeName(pNode->mName.C_Str());
 
@@ -246,8 +266,12 @@ void SkinnedMesh::InitializeRequiredNodeMap(const aiNode* pNode)
 
     m_requiredNodeMap[NodeName] = info;
 
+    string str = indent + "|--";
+    printf("xww InitializeRequiredNodeMap NodeName= %s%s    info.isRequired=%d\n", str.c_str(), NodeName.c_str(), info.isRequired);
+
+    indent += "|  ";
     for (unsigned int i = 0 ; i < pNode->mNumChildren ; i++) {
-        InitializeRequiredNodeMap(pNode->mChildren[i]);
+        InitializeRequiredNodeMap(pNode->mChildren[i], indent);
     }
 }
 
@@ -283,6 +307,7 @@ void SkinnedMesh::PopulateBuffers()
 
 void SkinnedMesh::PopulateBuffersNonDSA()
 {
+    printf("xww PopulateBuffersNonDSA\n");
     glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[VERTEX_BUFFER]);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[INDEX_BUFFER]);
 
@@ -314,6 +339,7 @@ void SkinnedMesh::PopulateBuffersNonDSA()
 
 void SkinnedMesh::PopulateBuffersDSA()
 {
+    printf("xww PopulateBuffersDSA\n");
     glNamedBufferStorage(m_Buffers[VERTEX_BUFFER], sizeof(m_SkinnedVertices[0]) * m_SkinnedVertices.size(), m_SkinnedVertices.data(), 0);
     glNamedBufferStorage(m_Buffers[INDEX_BUFFER], sizeof(m_Indices[0]) * m_Indices.size(), m_Indices.data(), GL_DYNAMIC_STORAGE_BIT);
 
@@ -375,6 +401,7 @@ void SkinnedMesh::CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeT
     uint NextPositionIndex = PositionIndex + 1;
     assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
     float t1 = (float)pNodeAnim->mPositionKeys[PositionIndex].mTime;
+    printf("\t\t\t\t\txww CalcInterpolatedPosition, AnimationTimeTicks=%f PositionIndex=%d t1=%f t1 > AnimationTimeTicks=%d\n", AnimationTimeTicks, PositionIndex, t1, t1 > AnimationTimeTicks);
     if (t1 > AnimationTimeTicks) {
         Out = pNodeAnim->mPositionKeys[PositionIndex].mValue;
     } else {
@@ -386,6 +413,8 @@ void SkinnedMesh::CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeT
         const aiVector3D& End = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
         aiVector3D Delta = End - Start;
         Out = Start + Factor * Delta;
+        printf("\t\t\t\t\txww CalcInterpolatedPosition, t1=%f t2=%f DeltaTime=%f Factor=%f Start=(%f,%f,%f) End=(%f,%f,%f) Delta=(%f,%f,%f) out=(%f,%f,%f)\n",
+            t1, t2, DeltaTime, Factor, Start.x, Start.y, Start.z, End.x, End.y, End.z, Delta.x, Delta.y, Delta.z, Out.x, Out.y, Out.z);
     }
 }
 
@@ -460,6 +489,7 @@ void SkinnedMesh::CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTi
     uint NextScalingIndex = ScalingIndex + 1;
     assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
     float t1 = (float)pNodeAnim->mScalingKeys[ScalingIndex].mTime;
+    printf("xww CalcInterpolatedScaling, AnimationTimeTicks=%f ScalingIndex=%d t1=%f\n", AnimationTimeTicks, ScalingIndex, t1);
     if (t1 > AnimationTimeTicks) {
         Out = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
     } else {
@@ -479,12 +509,12 @@ void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNod
 {
     string NodeName(pNode->mName.data);
 
-    string str = indent + "|--";
-    printf("xww ReadNodeHierarchy NodeName= %s%s\n", str.c_str(), NodeName.c_str());
     Matrix4f NodeTransformation(pNode->mTransformation);
 
     const aiNodeAnim* pNodeAnim = FindNodeAnim(Animation, NodeName);
 
+    string str = indent + "|--";
+    printf("xww ReadNodeHierarchy NodeName= %s%s   pNodeAnim->mNodeName=%s\n", str.c_str(), NodeName.c_str(), pNodeAnim?pNodeAnim->mNodeName.C_Str():"");
     if (pNodeAnim) {
         LocalTransform Transform;
         CalcLocalTransform(Transform, AnimationTimeTicks, pNodeAnim);
