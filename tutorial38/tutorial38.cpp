@@ -100,6 +100,7 @@ public:
         m_pEffect->SetMatSpecularIntensity(0.0f);
         m_pEffect->SetMatSpecularPower(0);
 
+        //InitSingleMesh是在Common/ogldev_skinned_mesh.cpp
         if (!m_mesh.LoadMesh("../Content/boblampclean.md5mesh")) {
             printf("Mesh load failed\n");
             return false;

@@ -256,4 +256,5 @@ void SkinningTechnique::SetBoneTransform(uint Index, const Matrix4f& Transform)
     }
     //Transform.Print();
     glUniformMatrix4fv(m_boneLocation[Index], 1, GL_TRUE, (const GLfloat*)Transform);
+    //6. notes: 根据已经好的骨骼FinalTransformation更新骨骼gBones[]信息
 }

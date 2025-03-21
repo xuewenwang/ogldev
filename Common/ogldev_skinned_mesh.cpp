@@ -74,6 +74,7 @@ void SkinnedMesh::InitSingleMesh(uint MeshIndex, const aiMesh* paiMesh)
 
         printf("xww InitSingleMesh, i=%d, v.Position=(%f, %f, %f)  v.Normal=(%f, %f, %f)  v.TexCoords=(%f, %f)\n", i,
             v.Position.x, v.Position.y, v.Position.z, v.Normal.x, v.Normal.y, v.Normal.z, v.TexCoords.x, v.TexCoords.y);
+        //1. notes: 设置网格的顶点的位置、法向量、纹理坐标
         m_SkinnedVertices.push_back(v);
     }
 
@@ -219,6 +220,7 @@ void SkinnedMesh::LoadSingleBone(uint MeshIndex, const aiBone* pBone, vector<Ski
         pBone->mName.C_Str(), pBone->mNumWeights, Scaling.x, Scaling.y, Scaling.z, Rotation.x, Rotation.y, Rotation.z, Position.x, Position.y, Position.z);
 
 
+    //2. notes: 给这个骨骼关联的顶点 设置骨骼id和权重（即填充VertexBoneData）
     for (uint i = 0 ; i < pBone->mNumWeights ; i++) {
         const aiVertexWeight& vw = pBone->mWeights[i];
         uint GlobalVertexID = BaseVertex + pBone->mWeights[i].mVertexId;
@@ -300,6 +302,7 @@ void SkinnedMesh::PopulateBuffers()
         PopulateBuffersDSA();
     }
     else {
+        //走这里
         PopulateBuffersNonDSA();
     }
 }
@@ -311,6 +314,7 @@ void SkinnedMesh::PopulateBuffersNonDSA()
     glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[VERTEX_BUFFER]);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[INDEX_BUFFER]);
 
+    //3. notes: 将所有顶点的信息上传到GPU上去，包括顶点的位置、法向量、纹理坐标，顶点的骨骼id、权重
     glBufferData(GL_ARRAY_BUFFER, sizeof(m_SkinnedVertices[0]) * m_SkinnedVertices.size(), &m_SkinnedVertices[0], GL_STATIC_DRAW);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_Indices[0]) * m_Indices.size(), &m_Indices[0], GL_STATIC_DRAW);
 
@@ -401,7 +405,8 @@ void SkinnedMesh::CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeT
     uint NextPositionIndex = PositionIndex + 1;
     assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
     float t1 = (float)pNodeAnim->mPositionKeys[PositionIndex].mTime;
-    printf("\t\t\t\t\txww CalcInterpolatedPosition, AnimationTimeTicks=%f PositionIndex=%d t1=%f t1 > AnimationTimeTicks=%d\n", AnimationTimeTicks, PositionIndex, t1, t1 > AnimationTimeTicks);
+    printf("\t\t\t\t\txww CalcInterpolatedPosition, AnimationTimeTicks=%f PositionIndex=%d t1=%f t1 > AnimationTimeTicks=%d pNodeAnim->mNumPositionKeys=%d\n",
+        AnimationTimeTicks, PositionIndex, t1, t1 > AnimationTimeTicks, pNodeAnim->mNumPositionKeys);
     if (t1 > AnimationTimeTicks) {
         Out = pNodeAnim->mPositionKeys[PositionIndex].mValue;
     } else {
@@ -517,6 +522,7 @@ void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNod
     printf("xww ReadNodeHierarchy NodeName= %s%s   pNodeAnim->mNodeName=%s\n", str.c_str(), NodeName.c_str(), pNodeAnim?pNodeAnim->mNodeName.C_Str():"");
     if (pNodeAnim) {
         LocalTransform Transform;
+        //4. notes: 根据动画更新骨骼LocalTransform
         CalcLocalTransform(Transform, AnimationTimeTicks, pNodeAnim);
 
         Matrix4f ScalingM;
@@ -533,6 +539,7 @@ void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNod
         NodeTransformation = TranslationM * RotationM * ScalingM;
     }
 
+    //5. notes: 更新骨骼FinalTransformation
     Matrix4f GlobalTransformation = ParentTransform * NodeTransformation;
 
     if (m_BoneNameToIndexMap.find(NodeName) != m_BoneNameToIndexMap.end()) {

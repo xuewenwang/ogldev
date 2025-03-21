@@ -18,6 +18,7 @@ uniform mat4 gBones[MAX_BONES];
 
 void main()
 {
+    //7. notes: 根据骨骼信息更新顶点的位置
     mat4 BoneTransform = gBones[BoneIDs[0]] * Weights[0];
     BoneTransform     += gBones[BoneIDs[1]] * Weights[1];
     BoneTransform     += gBones[BoneIDs[2]] * Weights[2];
