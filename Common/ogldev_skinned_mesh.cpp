@@ -195,7 +195,6 @@ void SkinnedMesh::LoadMeshBones(uint MeshIndex, const aiMesh* pMesh, vector<Skin
     printf("xww LoadMeshBones, MeshIndex=%d BaseVertex=%d pMesh->mNumBones=%d\n", MeshIndex, BaseVertex, pMesh->mNumBones);
     // printf("Loading mesh bones %d\n", MeshIndex);
     for (uint i = 0 ; i < pMesh->mNumBones ; i++) {
-        printf("xww LoadMeshBones, i=%d\n", i);
         // printf("Bone %d %s\n", i, pMesh->mBones[i]->mName.C_Str());
         LoadSingleBone(MeshIndex, pMesh->mBones[i], SkinnedVertices, BaseVertex);
     }
@@ -226,6 +225,7 @@ void SkinnedMesh::LoadSingleBone(uint MeshIndex, const aiBone* pBone, vector<Ski
         uint GlobalVertexID = BaseVertex + pBone->mWeights[i].mVertexId;
         // printf("%d: %d %f\n",i, pBone->mWeights[i].mVertexId, vw.mWeight);
         SkinnedVertices[GlobalVertexID].Bones.AddBoneData(BoneId, vw.mWeight);
+        // if(vw.mVertexId == 3)
         printf("xww LoadSingleBone, i=%d, vw.mVertexId=%d, vw.mWeight=%f BaseVertex=%d GlobalVertexID=%d\n", i, vw.mVertexId, vw.mWeight, BaseVertex, GlobalVertexID);
     }
 
@@ -660,7 +660,14 @@ void SkinnedMesh::GetBoneTransforms(float TimeInSeconds, vector<Matrix4f>& Trans
 {
     if (AnimationIndex >= m_pScene->mNumAnimations) {
         printf("Invalid animation index %d, max is %d\n", AnimationIndex, m_pScene->mNumAnimations);
-        assert(0);
+        // assert(0);
+        return;
+
+        // Transforms.resize(m_BoneInfo.size());
+        // for (uint i = 0 ; i < m_BoneInfo.size() ; i++) {
+        //     Transforms[i] = m_BoneInfo[i].FinalTransformation;
+        // }
+        // return;
     }
 
     Matrix4f Identity;

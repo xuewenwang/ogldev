@@ -102,6 +102,7 @@ public:
 
         //InitSingleMesh是在Common/ogldev_skinned_mesh.cpp
         if (!m_mesh.LoadMesh("../Content/boblampclean.md5mesh")) {
+        // if (!m_mesh.LoadMesh("../Content/L_Hand_MRTK_Rig_1.fbx")) {
             printf("Mesh load failed\n");
             return false;
         }
@@ -137,6 +138,8 @@ public:
         m_mesh.GetBoneTransforms(RunningTime, Transforms);
 
         for (uint i = 0 ; i < Transforms.size() ; i++) {
+            // printf("xww RenderSceneCB i=%d Transforms=", i);
+            // Transforms[i].Print();
             m_pEffect->SetBoneTransform(i, Transforms[i]);
         }
 

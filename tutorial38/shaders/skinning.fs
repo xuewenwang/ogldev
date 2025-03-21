@@ -136,4 +136,5 @@ void main()
     }
 
     FragColor = texture(gColorMap, In.TexCoord.xy) * TotalLight;// + vec4(1.0);
+    // FragColor = vec4((texture(gColorMap, In.TexCoord.xy) * TotalLight).r, 1.0, 1.0, 1.0); //+ vec4(1.0);
 }
